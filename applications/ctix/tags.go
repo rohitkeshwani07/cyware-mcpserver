@@ -38,9 +38,9 @@ type TagListingResponse struct {
 	Total int `json:"total"`
 }
 
-func GetCTIXTagListing(params map[string]string) (*common.APIResponse, error) {
+func GetCTIXTagListing(ctx context.Context, params map[string]string) (*common.APIResponse, error) {
 	tag_listing_resp := TagListingResponse{}
-	resp, err := CTIX_CLIENT.MakeRequest("GET", tag_listing_endpoint, params, &tag_listing_resp, nil, nil)
+	resp, err := CTIX_CLIENT.MakeRequestWithContext(ctx, "GET", tag_listing_endpoint, params, &tag_listing_resp, nil, nil, "ctix")
 	return &common.APIResponse{
 		FilteredReponse: common.JsonifyResponse(tag_listing_resp),
 		RawResponse:     resp,
@@ -64,18 +64,18 @@ func GetCTIXTagListingTool(s *server.MCPServer) {
 	s.AddTool(getCTIXTagListing, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		params_list := []string{"page", "page_size", "tag_type", "q"}
 		params := common.ExtractParams(request, params_list)
-		resp, err := GetCTIXTagListing(params)
+		resp, err := GetCTIXTagListing(ctx, params)
 		return common.MCPToolResponse(resp, []int{200}, err)
 	})
 }
 
-func CreateTaginCTIX(payload any) (*common.APIResponse, error) {
+func CreateTaginCTIX(ctx context.Context, payload any) (*common.APIResponse, error) {
 	endpoint := "ingestion/tags/bulk-actions/"
 	param := map[string]string{
 		"component": "tag",
 	}
 	tag_resp := TagCreationResponse{}
-	resp, err := CTIX_CLIENT.MakeRequest("POST", endpoint, param, &tag_resp, payload, nil)
+	resp, err := CTIX_CLIENT.MakeRequestWithContext(ctx, "POST", endpoint, param, &tag_resp, payload, nil, "ctix")
 	return &common.APIResponse{
 		FilteredReponse: common.JsonifyResponse(tag_resp),
 		RawResponse:     resp,
@@ -93,7 +93,7 @@ func CreateTaginCTIXTool(s *server.MCPServer) {
 	)
 
 	s.AddTool(createTaginCTIXTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		resp, err := CreateTaginCTIX(request.Params.Arguments)
+		resp, err := CreateTaginCTIX(ctx, request.Params.Arguments)
 		return common.MCPToolResponse(resp, []int{200}, err)
 	})
 

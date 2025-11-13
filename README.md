@@ -19,6 +19,7 @@ Cyware MCP Server is a high-performance Model Context Protocol (MCP) server buil
 - **🔗 MCP Protocol Compliance**: Full implementation based on the Model Context Protocol specification
 - **🎯 Multi-Application Support**: Integrated access to Cyware Intel Exchange (CTIX) and Cyware Orchestrate (CO)
 - **🔒 Secure AI Integration**: Robust authentication and authorization using `config.yaml` file
+- **🔄 Dynamic Routing**: Client-side authentication and backend routing via HTTP headers
 - **🛠️ Tool Definitions**: Structured tools for AI agents to interact with Cyware services
 - **⚙️ Configurable**: Easy configuration via YAML files
 - **🚀 High Performance**: Built with Go for optimal speed and reliability
@@ -66,9 +67,30 @@ cyware-mcpserver/
 
 ### ⚙️ Configuration
 
-In `cmd/config.yaml`, update the following details::
-- Cyware application credentials
+In `cmd/config.yaml`, update the following details:
+- Cyware application credentials (optional if using client-side configuration)
 - MCP server transport settings — Choose either stdio or sse (with specified port)
+
+#### Dynamic Client-Side Configuration (SSE Mode Only)
+
+When using SSE mode, clients can override authentication and backend URLs via HTTP headers:
+
+```json
+{
+  "mcpServers": {
+    "cyware-server": {
+      "url": "http://localhost:8000/sse",
+      "headers": [
+        "Authorization: Bearer <your-token>",
+        "X-Ctix-Base-Url: https://your-ctix-instance.com",
+        "X-Co-Base-Url: https://your-co-instance.com"
+      ]
+    }
+  }
+}
+```
+
+For detailed information about dynamic routing, see [DYNAMIC_ROUTING.md](DYNAMIC_ROUTING.md).
 
 ### 🚀 Running the MCP Server
 

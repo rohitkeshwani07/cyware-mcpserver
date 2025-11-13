@@ -89,10 +89,10 @@ type QuickAddIntelResponse struct {
 	TaskID  string `json:"task_id"`
 }
 
-func CreateQuickAddIntel(payload any) (*common.APIResponse, error) {
+func CreateQuickAddIntel(ctx context.Context, payload any) (*common.APIResponse, error) {
 	// implementation of quick add intel
 	quick_add_resp := &QuickAddIntelResponse{}
-	resp, err := CTIX_CLIENT.MakeRequest("POST", Quick_add_intel_create, nil, quick_add_resp, payload, nil)
+	resp, err := CTIX_CLIENT.MakeRequestWithContext(ctx, "POST", Quick_add_intel_create, nil, quick_add_resp, payload, nil, "ctix")
 	return &common.APIResponse{
 		FilteredReponse: common.JsonifyResponse(quick_add_resp),
 		RawResponse:     resp,
@@ -116,7 +116,7 @@ func CreateQuickAddIntelTool(s *server.MCPServer) {
 	)
 
 	s.AddTool(quickAddIntelCreateTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		resp, err := CreateQuickAddIntel(request.Params.Arguments)
+		resp, err := CreateQuickAddIntel(ctx, request.Params.Arguments)
 		return common.MCPToolResponse(resp, []int{200}, err)
 	})
 }

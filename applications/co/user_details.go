@@ -1,5 +1,7 @@
 package co
 
+import "context"
+
 const user_details_endpoint = "/cpapi/rest-auth/user-details/"
 
 type LoggedInUserDetailsResponse struct {
@@ -67,8 +69,8 @@ type LoggedInUserDetailsResponse struct {
 	TenantID             string `json:"tenant_id"`
 }
 
-func GetLoggedInUserDetails() *LoggedInUserDetailsResponse {
+func GetLoggedInUserDetails(ctx context.Context) *LoggedInUserDetailsResponse {
 	user_details_resp := LoggedInUserDetailsResponse{}
-	CO_CLIENT.MakeRequest("GET", user_details_endpoint, nil, &user_details_resp, nil, nil)
+	CO_CLIENT.MakeRequestWithContext(ctx, "GET", user_details_endpoint, nil, &user_details_resp, nil, nil, "co")
 	return &user_details_resp
 }
