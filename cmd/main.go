@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"net/http"
 
 	"github.com/cyware-labs/cyware-mcpserver/applications/co"
 	"github.com/cyware-labs/cyware-mcpserver/applications/ctix"
@@ -48,12 +49,24 @@ func main() {
 		if err := server.ServeStdio(s); err != nil {
 			log.Fatalf("Server error: %v\n", err)
 		}
+	case "http":
+		// HTTP mode with header extraction
+		http.HandleFunc("/mcp", HTTPHandler(s))
+		
+		addr := ":" + cfg.Server.Port
+		log.Printf("MCP HTTP server listening on %s", addr)
+		log.Printf("Send POST requests to http://localhost%s/mcp", addr)
+		
+		if err := http.ListenAndServe(addr, nil); err != nil {
+			log.Fatalf("Server error: %v", err)
+		}
 	case "sse":
+		// SSE mode (legacy, headers not fully supported)
 		sseServer := server.NewSSEServer(s)
 		if err := sseServer.Start(":" + cfg.Server.Port); err != nil {
 			log.Fatalf("Server error: %v", err)
 		}
-		log.Printf("MCP server listening on :%v", cfg.Server.Port)
+		log.Printf("MCP SSE server listening on :%v", cfg.Server.Port)
 	}
 
 }

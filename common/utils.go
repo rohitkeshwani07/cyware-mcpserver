@@ -1,9 +1,11 @@
 package common
 
 import (
+	"context"
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/base64"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -15,6 +17,39 @@ import (
 const retry = 4
 
 var failed_status = []int{400, 401}
+
+// ExtractHeadersFromHTTPRequest extracts all headers from an HTTP request
+// and returns them as a map[string]string
+func ExtractHeadersFromHTTPRequest(r *http.Request) map[string]string {
+	headers := make(map[string]string)
+	if r == nil {
+		return headers
+	}
+	
+	for key, values := range r.Header {
+		if len(values) > 0 {
+			headers[key] = values[0] // Take the first value if multiple exist
+		}
+	}
+	return headers
+}
+
+// InjectHeadersIntoContext creates a new context with the given headers
+func InjectHeadersIntoContext(ctx context.Context, headers map[string]string) context.Context {
+	return context.WithValue(ctx, HeadersContextKey, headers)
+}
+
+// GetHeadersFromContext extracts headers from the given context
+func GetHeadersFromContext(ctx context.Context) map[string]string {
+	if ctx == nil {
+		return make(map[string]string)
+	}
+	
+	if headers, ok := ctx.Value(HeadersContextKey).(map[string]string); ok {
+		return headers
+	}
+	return make(map[string]string)
+}
 
 func FormatCywareToken(rawToken string) string {
 	const prefix = "CYW "

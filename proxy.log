@@ -1,0 +1,13 @@
+2025/11/13 09:50:06 Test proxy server listening on http://localhost:9090
+2025/11/13 09:50:06 All incoming requests will be logged to console
+2025/11/13 09:50:07 
+=== Incoming Request ===
+2025/11/13 09:50:07 Method: GET
+2025/11/13 09:50:07 URL: /cpapi/rest-auth/user-details/
+2025/11/13 09:50:07 Path: /cpapi/rest-auth/user-details/
+2025/11/13 09:50:07 
+--- Headers ---
+2025/11/13 09:50:07 User-Agent: go-resty/3.0.0-beta.1 (https://resty.dev)
+2025/11/13 09:50:07 Accept-Encoding: gzip, deflate
+2025/11/13 09:50:07 Authorization: CYW default-static-token
+2025/11/13 09:50:07 ======================

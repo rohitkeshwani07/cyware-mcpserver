@@ -85,10 +85,10 @@ type UserGroupListingResponse struct {
 	PermissionGranted int `json:"permission_granted"`
 }
 
-func GetCTIXUserListing(params map[string]string) UserListingResponse {
+func GetCTIXUserListing(ctx context.Context, params map[string]string) UserListingResponse {
 
 	resp := UserListingResponse{}
-	CTIX_CLIENT.MakeRequest("GET", user_listing_endpoint, params, &resp, nil, nil)
+	CTIX_CLIENT.MakeRequestWithContext(ctx, "GET", user_listing_endpoint, params, &resp, nil, nil, "ctix")
 
 	return resp
 }
@@ -113,16 +113,16 @@ func GetCTIXUserListingTool(s *server.MCPServer) {
 	s.AddTool(getCTIXUserListingTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		params_list := []string{"page", "page_size", "q", "is_active", "is_blocked", "is_read_only"}
 		params := common.ExtractParams(request, params_list)
-		resp := GetCTIXUserListing(params)
+		resp := GetCTIXUserListing(ctx, params)
 		result, _ := json.Marshal(resp)
 
 		return mcp.NewToolResultText(fmt.Sprintf("Successfully got the list of users in CTIX %v", string(result))), nil
 	})
 }
 
-func GetCTIXUserGroupList(params map[string]string) UserGroupListingResponse {
+func GetCTIXUserGroupList(ctx context.Context, params map[string]string) UserGroupListingResponse {
 	resp := UserGroupListingResponse{}
-	CTIX_CLIENT.MakeRequest("GET", user_group_listing_endpoint, params, &resp, nil, nil)
+	CTIX_CLIENT.MakeRequestWithContext(ctx, "GET", user_group_listing_endpoint, params, &resp, nil, nil, "ctix")
 	return resp
 }
 
@@ -143,7 +143,7 @@ func GetCTIXUserGroupListTool(s *server.MCPServer) {
 	s.AddTool(getCTIXUserGroupListTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		params_list := []string{"page", "page_size", "q"}
 		params := common.ExtractParams(request, params_list)
-		resp := GetCTIXUserGroupList(params)
+		resp := GetCTIXUserGroupList(ctx, params)
 		result, _ := json.Marshal(resp)
 
 		return mcp.NewToolResultText(fmt.Sprintf("Successfully got the list of users group in CTIX %v", string(result))), nil

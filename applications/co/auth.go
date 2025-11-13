@@ -1,6 +1,7 @@
 package co
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -57,7 +58,8 @@ func Login() {
 }
 
 func SetUpWorkspace() {
-	resp := GetLoggedInUserDetails()
+	// Use background context for initialization
+	resp := GetLoggedInUserDetails(context.Background())
 	USER_WS = resp.PreferredWorkspace.Code
 }
 

@@ -1,0 +1,14 @@
+applications:
+  ctix:
+    base_url: "http://localhost:9090/"
+    auth:
+      type: "token"
+      token: "default-static-token"
+  co:
+    base_url: "http://localhost:9090/"
+    auth:
+      type: "token"
+      token: "default-static-token"
+server:
+  mcp_mode: "http"
+  port: "8000"
