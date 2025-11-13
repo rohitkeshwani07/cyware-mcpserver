@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -53,7 +54,28 @@ func main() {
 	case "sse":
 		// Create SSE server with context function to inject headers
 		contextFunc := func(ctx context.Context, r *http.Request) context.Context {
+			// THIS SHOULD ALWAYS PRINT IF THE FUNCTION IS CALLED
+			fmt.Println("!!! CONTEXT FUNCTION CALLED !!!")
+			
 			headers := common.ExtractHeadersFromHTTPRequest(r)
+			
+			// Debug logging to stdout
+			fmt.Printf("\n[SSE Context] Extracting headers from request to %s\n", r.URL.Path)
+			if auth, ok := headers["Authorization"]; ok {
+				authPreview := auth
+				if len(authPreview) > 50 {
+					authPreview = authPreview[:50] + "..."
+				}
+				fmt.Printf("[SSE Context]   Found Authorization: %s\n", authPreview)
+			}
+			if ctixURL, ok := headers["X-Ctix-Base-Url"]; ok {
+				fmt.Printf("[SSE Context]   Found X-Ctix-Base-Url: %s\n", ctixURL)
+			}
+			if coURL, ok := headers["X-Co-Base-Url"]; ok {
+				fmt.Printf("[SSE Context]   Found X-Co-Base-Url: %s\n", coURL)
+			}
+			fmt.Printf("[SSE Context]   Total headers extracted: %d\n", len(headers))
+			
 			return common.InjectHeadersIntoContext(ctx, headers)
 		}
 		
