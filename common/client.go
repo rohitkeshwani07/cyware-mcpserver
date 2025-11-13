@@ -2,7 +2,6 @@ package common
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"resty.dev/v3"
@@ -64,19 +63,9 @@ func (a *APIClient) MakeRequestWithContext(ctx context.Context, method string, e
 				clientHeaders[k] = v
 			}
 			
-			fmt.Printf("[API Client] Found %d headers in context for %s request\n", len(clientHeaders), appType)
-			if auth, ok := clientHeaders["Authorization"]; ok {
-				authPreview := auth
-				if len(authPreview) > 30 {
-					authPreview = authPreview[:30] + "..."
-				}
-				fmt.Printf("[API Client] Using Authorization from context: %s\n", authPreview)
-			}
-			
 			// Check for dynamic base URL based on app type
 			if appType == "ctix" {
 				if ctixBaseURL, exists := ctxHeaders["X-Ctix-Base-Url"]; exists && ctixBaseURL != "" {
-					fmt.Printf("[API Client] Using dynamic CTIX base URL: %s\n", ctixBaseURL)
 					baseURL = ctixBaseURL
 					if baseURL[len(baseURL)-1] != '/' {
 						baseURL += "/"
@@ -85,18 +74,13 @@ func (a *APIClient) MakeRequestWithContext(ctx context.Context, method string, e
 				}
 			} else if appType == "co" {
 				if coBaseURL, exists := ctxHeaders["X-Co-Base-Url"]; exists && coBaseURL != "" {
-					fmt.Printf("[API Client] Using dynamic CO base URL: %s\n", coBaseURL)
 					baseURL = coBaseURL
 					if baseURL[len(baseURL)-1] != '/' {
 						baseURL += "/"
 					}
 				}
 			}
-		} else {
-			fmt.Printf("[API Client] No headers found in context for %s request\n", appType)
 		}
-	} else {
-		fmt.Printf("[API Client] Context is nil for %s request\n", appType)
 	}
 	
 	request_url := baseURL + endpoint

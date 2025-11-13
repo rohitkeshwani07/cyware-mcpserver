@@ -10,5 +10,5 @@ applications:
       type: "token"
       token: "default-static-token"
 server:
-  mcp_mode: "sse"
+  mcp_mode: "http"
   port: "8000"

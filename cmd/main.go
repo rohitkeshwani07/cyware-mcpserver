@@ -1,9 +1,7 @@
 package main
 
 import (
-	"context"
 	"flag"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -51,39 +49,24 @@ func main() {
 		if err := server.ServeStdio(s); err != nil {
 			log.Fatalf("Server error: %v\n", err)
 		}
-	case "sse":
-		// Create SSE server with context function to inject headers
-		contextFunc := func(ctx context.Context, r *http.Request) context.Context {
-			// THIS SHOULD ALWAYS PRINT IF THE FUNCTION IS CALLED
-			fmt.Println("!!! CONTEXT FUNCTION CALLED !!!")
-			
-			headers := common.ExtractHeadersFromHTTPRequest(r)
-			
-			// Debug logging to stdout
-			fmt.Printf("\n[SSE Context] Extracting headers from request to %s\n", r.URL.Path)
-			if auth, ok := headers["Authorization"]; ok {
-				authPreview := auth
-				if len(authPreview) > 50 {
-					authPreview = authPreview[:50] + "..."
-				}
-				fmt.Printf("[SSE Context]   Found Authorization: %s\n", authPreview)
-			}
-			if ctixURL, ok := headers["X-Ctix-Base-Url"]; ok {
-				fmt.Printf("[SSE Context]   Found X-Ctix-Base-Url: %s\n", ctixURL)
-			}
-			if coURL, ok := headers["X-Co-Base-Url"]; ok {
-				fmt.Printf("[SSE Context]   Found X-Co-Base-Url: %s\n", coURL)
-			}
-			fmt.Printf("[SSE Context]   Total headers extracted: %d\n", len(headers))
-			
-			return common.InjectHeadersIntoContext(ctx, headers)
-		}
+	case "http":
+		// HTTP mode with header extraction
+		http.HandleFunc("/mcp", HTTPHandler(s))
 		
-		sseServer := server.NewSSEServer(s, server.WithSSEContextFunc(contextFunc))
+		addr := ":" + cfg.Server.Port
+		log.Printf("MCP HTTP server listening on %s", addr)
+		log.Printf("Send POST requests to http://localhost%s/mcp", addr)
+		
+		if err := http.ListenAndServe(addr, nil); err != nil {
+			log.Fatalf("Server error: %v", err)
+		}
+	case "sse":
+		// SSE mode (legacy, headers not fully supported)
+		sseServer := server.NewSSEServer(s)
 		if err := sseServer.Start(":" + cfg.Server.Port); err != nil {
 			log.Fatalf("Server error: %v", err)
 		}
-		log.Printf("MCP server listening on :%v", cfg.Server.Port)
+		log.Printf("MCP SSE server listening on :%v", cfg.Server.Port)
 	}
 
 }

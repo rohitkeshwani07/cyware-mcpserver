@@ -1,10 +1,12 @@
 # Dynamic Authentication and Backend Routing
 
-This document describes the implementation of dynamic authentication and backend routing for the Cyware MCP Server.
+This document describes the implementation of dynamic authentication and backend routing for the Cyware MCP Server via HTTP mode.
 
 ## Overview
 
-The MCP Server now supports client-side configuration for authentication and backend routing. This allows clients to specify authentication tokens and backend URLs via HTTP headers instead of relying solely on the server's configuration file.
+The MCP Server now supports client-side configuration for authentication and backend routing via a streamable HTTP endpoint. This allows clients to specify authentication tokens and backend URLs via HTTP headers instead of relying solely on the server's configuration file.
+
+**Note**: This feature requires using `mcp_mode: "http"` in the configuration.
 
 ## Features
 
@@ -25,34 +27,48 @@ All incoming HTTP headers from the client are automatically extracted and forwar
 
 ## Client Configuration
 
-To use this feature, configure your MCP client with the following structure:
+### HTTP Mode (Recommended)
 
-```json
-{
-  "mcpServers": {
-    "cyware-server": {
-      "url": "http://localhost:8000/sse",
-      "headers": [
-        "Authorization: Bearer <your-token>",
-        "X-Ctix-Base-Url: https://ctix-backend.example.com",
-        "X-Co-Base-Url: https://co-backend.example.com"
-      ]
+Configure the server to use HTTP mode in `config.yaml`:
+
+```yaml
+server:
+  mcp_mode: "http"
+  port: "8000"
+```
+
+Then make requests to the `/mcp` endpoint with custom headers:
+
+```bash
+curl -X POST http://localhost:8000/mcp \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <your-token>" \
+  -H "X-Ctix-Base-Url: https://ctix-backend.example.com" \
+  -H "X-Co-Base-Url: https://co-backend.example.com" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/call",
+    "params": {
+      "name": "logged-in-user-details",
+      "arguments": {}
     }
-  }
-}
+  }'
 ```
 
 ## Implementation Details
 
 ### Architecture
 
-1. **Context Injection**: When an SSE request is received, all HTTP headers are extracted and injected into the request context using `WithSSEContextFunc`.
+1. **HTTP Handler**: The `/mcp` endpoint receives POST requests with JSON-RPC payloads and extracts all HTTP headers.
 
-2. **Dynamic Header Resolution**: The `MakeRequestWithContext` method in `APIClient` extracts headers from the context and applies them to outgoing requests.
+2. **Context Injection**: All HTTP headers are extracted from the request and injected into the request context before processing.
 
-3. **Base URL Override**: If a client provides `X-Ctix-Base-Url` or `X-Co-Base-Url` headers, these will override the configured base URLs for that specific request.
+3. **Dynamic Header Resolution**: The `MakeRequestWithContext` method in `APIClient` extracts headers from the context and applies them to outgoing requests.
 
-4. **Authentication Priority**: Client-provided `Authorization` headers take precedence over server-configured authentication.
+4. **Base URL Override**: If a client provides `X-Ctix-Base-Url` or `X-Co-Base-Url` headers, these will override the configured base URLs for that specific request.
+
+5. **Authentication Priority**: Client-provided `Authorization` headers take precedence over server-configured authentication.
 
 ### Key Components
 
@@ -70,7 +86,13 @@ To use this feature, configure your MCP client with the following structure:
 
 #### `cmd/main.go`
 
-- Configures SSE server with `WithSSEContextFunc` to inject headers into the request context
+- Configures HTTP server with `/mcp` endpoint for JSON-RPC requests
+- Supports `http`, `sse` (legacy), and `stdio` modes
+
+#### `cmd/http_handler.go`
+
+- HTTP handler that extracts headers and injects them into context
+- Delegates JSON-RPC processing to the MCP server's `HandleMessage` method
 
 ### Tool Handler Updates
 
@@ -96,18 +118,30 @@ All headers are normalized to their canonical form (e.g., `x-ctix-base-url` beco
 
 To test the dynamic routing:
 
-1. **Start the server in SSE mode**:
+1. **Start the server in HTTP mode**:
    ```bash
-   go run cmd/main.go -config_path cmd/config.yaml
+   ./cyware-mcp-server -config_path config.yaml
    ```
-   Make sure `mcp_mode: "sse"` and a port is configured in `config.yaml`.
+   Make sure `mcp_mode: "http"` and a port is configured in `config.yaml`.
 
-2. **Configure your MCP client** with the headers as shown in the Client Configuration section above.
+2. **Make a test request** with custom headers:
+   ```bash
+   curl -X POST http://localhost:8000/mcp \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer test-token-123" \
+     -H "X-Ctix-Base-Url: https://your-ctix.com" \
+     -d '{
+       "jsonrpc": "2.0",
+       "id": 1,
+       "method": "tools/list"
+     }'
+   ```
 
-3. **Invoke any tool** through the client and verify:
+3. **Verify**:
    - The `Authorization` header is forwarded to the backend
    - Requests are routed to the URLs specified in `X-Ctix-Base-Url` or `X-Co-Base-Url`
    - All other headers are also forwarded
+   - See [TESTING_RESULTS.md](TESTING_RESULTS.md) for detailed test results
 
 4. **Test fallback behavior**:
    - Remove client headers and verify the server uses `config.yaml` settings

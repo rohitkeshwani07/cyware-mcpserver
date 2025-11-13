@@ -71,26 +71,35 @@ In `cmd/config.yaml`, update the following details:
 - Cyware application credentials (optional if using client-side configuration)
 - MCP server transport settings — Choose either stdio or sse (with specified port)
 
-#### Dynamic Client-Side Configuration (SSE Mode Only)
+#### Dynamic Client-Side Configuration (HTTP Mode)
 
-When using SSE mode, clients can override authentication and backend URLs via HTTP headers:
+When using HTTP mode, clients can override authentication and backend URLs via HTTP headers:
 
-```json
-{
-  "mcpServers": {
-    "cyware-server": {
-      "url": "http://localhost:8000/sse",
-      "headers": [
-        "Authorization: Bearer <your-token>",
-        "X-Ctix-Base-Url: https://your-ctix-instance.com",
-        "X-Co-Base-Url: https://your-co-instance.com"
-      ]
+```bash
+curl -X POST http://localhost:8000/mcp \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <your-token>" \
+  -H "X-Ctix-Base-Url: https://your-ctix-instance.com" \
+  -H "X-Co-Base-Url: https://your-co-instance.com" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/call",
+    "params": {
+      "name": "tool-name",
+      "arguments": {}
     }
-  }
-}
+  }'
 ```
 
-For detailed information about dynamic routing, see [DYNAMIC_ROUTING.md](DYNAMIC_ROUTING.md).
+**Configuration in config.yaml:**
+```yaml
+server:
+  mcp_mode: "http"  # Use HTTP mode for header-based routing
+  port: "8000"
+```
+
+For detailed information about dynamic routing, see [DYNAMIC_ROUTING.md](DYNAMIC_ROUTING.md) and [TESTING_RESULTS.md](TESTING_RESULTS.md).
 
 ### 🚀 Running the MCP Server
 
