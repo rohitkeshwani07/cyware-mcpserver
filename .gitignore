@@ -1,2 +1,4 @@
 .DS_Store
 cmd/cmd
+mcp-server
+vendor/
