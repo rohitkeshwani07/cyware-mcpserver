@@ -2,3 +2,14 @@
 cmd/cmd
 mcp-server
 vendor/
+
+# Test artifacts
+test-proxy
+*.log
+*.pid
+test_config.yaml
+test_proxy.go
+verify_headers.go
+verify_dynamic_routing.go
+test_client.sh
+test_headers_automated.sh
