@@ -101,11 +101,11 @@ type RelationTypeListingResponse struct {
 	PageSize int `json:"page_size"`
 }
 
-func GetThreatDataObjectDetails(object_id, object_type string) (*common.APIResponse, error) {
+func GetThreatDataObjectDetails(object_id, object_type string, headers map[string]string) (*common.APIResponse, error) {
 	endpoint := fmt.Sprintf("ingestion/threat-data/%s/%s/basic/", object_type, object_id)
 	threat_data_details_basic_resp := ThreadDataDetailsBasicResponse{}
 
-	resp, err := CTIX_CLIENT.MakeRequest("GET", endpoint, nil, &threat_data_details_basic_resp, nil, nil)
+	resp, err := CTIX_CLIENT.MakeRequest("GET", endpoint, nil, &threat_data_details_basic_resp, nil, headers)
 	return &common.APIResponse{
 		FilteredReponse: common.JsonifyResponse(threat_data_details_basic_resp),
 		RawResponse:     resp,
@@ -130,15 +130,16 @@ func GetThreatDataObjectDetailsTool(s *server.MCPServer) {
 		object_type := request.Params.Arguments["object_type"].(string)
 		object_id := request.Params.Arguments["object_id"].(string)
 
-		resp, err := GetThreatDataObjectDetails(object_id, object_type)
+		headers := common.PrepareRequestHeaders(ctx)
+		resp, err := GetThreatDataObjectDetails(object_id, object_type, headers)
 		return common.MCPToolResponse(resp, []int{200}, err)
 	})
 }
 
-func GetThreatDataObjectRelations(params map[string]string, object_id, object_type string) (*common.APIResponse, error) {
+func GetThreatDataObjectRelations(params map[string]string, object_id, object_type string, headers map[string]string) (*common.APIResponse, error) {
 	endpoint := fmt.Sprintf("ingestion/threat-data/%s/%s/relations/", object_type, object_id)
 	threatDataRelation_resp := ThreatDataRelationsResponse{}
-	resp, err := CTIX_CLIENT.MakeRequest("GET", endpoint, params, &threatDataRelation_resp, nil, nil)
+	resp, err := CTIX_CLIENT.MakeRequest("GET", endpoint, params, &threatDataRelation_resp, nil, headers)
 	return &common.APIResponse{
 		FilteredReponse: common.JsonifyResponse(threatDataRelation_resp),
 		RawResponse:     resp,
@@ -174,7 +175,8 @@ func GetThreatDataObjectRelationsTool(s *server.MCPServer) {
 
 		params_list := []string{"direction", "page", "page_size", "object_type", "q"}
 		params := common.ExtractParams(request, params_list)
-		resp, err := GetThreatDataObjectRelations(params, object_id, object_type)
+		headers := common.PrepareRequestHeaders(ctx)
+		resp, err := GetThreatDataObjectRelations(params, object_id, object_type, headers)
 		return common.MCPToolResponse(resp, []int{200}, err)
 	})
 }

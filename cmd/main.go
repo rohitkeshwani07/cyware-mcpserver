@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
+	"net/http"
 
 	"github.com/cyware-labs/cyware-mcpserver/applications/co"
 	"github.com/cyware-labs/cyware-mcpserver/applications/ctix"
@@ -49,7 +51,14 @@ func main() {
 			log.Fatalf("Server error: %v\n", err)
 		}
 	case "sse":
-		sseServer := server.NewSSEServer(s)
+		// Configure SSE server to inject HTTP headers into context for dynamic auth and routing
+		sseServer := server.NewSSEServer(s,
+			server.WithSSEContextFunc(func(ctx context.Context, r *http.Request) context.Context {
+				// Store HTTP headers in context so tools can access them for
+				// dynamic authentication and backend routing
+				return context.WithValue(ctx, common.HeadersContextKey, r.Header)
+			}),
+		)
 		if err := sseServer.Start(":" + cfg.Server.Port); err != nil {
 			log.Fatalf("Server error: %v", err)
 		}

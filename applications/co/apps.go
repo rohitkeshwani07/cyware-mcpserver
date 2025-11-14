@@ -68,9 +68,9 @@ type AppActionsResponse struct {
 	Total int `json:"total"`
 }
 
-func GetCOAppsListing(params map[string]string) (*common.APIResponse, error) {
+func GetCOAppsListing(params map[string]string, headers map[string]string) (*common.APIResponse, error) {
 	app_listing_resp := AppsListingResponse{}
-	resp, err := CO_CLIENT.MakeRequest("GET", GetSoarEndpoint(list_apps_endpoint), params, &app_listing_resp, nil, nil)
+	resp, err := CO_CLIENT.MakeRequest("GET", GetSoarEndpoint(list_apps_endpoint), params, &app_listing_resp, nil, headers)
 	return &common.APIResponse{
 		FilteredReponse: common.JsonifyResponse(app_listing_resp),
 		RawResponse:     resp,
@@ -94,14 +94,15 @@ func GetCOAppsListingTool(s *server.MCPServer) {
 	s.AddTool(getCOAppsListingTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		params_list := []string{"page", "page_size", "configured", "q"}
 		params := common.ExtractParams(request, params_list)
-		resp, err := GetCOAppsListing(params)
+		headers := common.PrepareRequestHeaders(ctx)
+		resp, err := GetCOAppsListing(params, headers)
 		return common.MCPToolResponse(resp, []int{200}, err)
 	})
 }
 
-func GetCOAppDetails(apphash string) (*common.APIResponse, error) {
+func GetCOAppDetails(apphash string, headers map[string]string) (*common.APIResponse, error) {
 	endpoint := GetSoarEndpoint(fmt.Sprintf("%v%v/", list_apps_endpoint, apphash))
-	resp, err := CO_CLIENT.MakeRequest("GET", endpoint, nil, nil, nil, nil)
+	resp, err := CO_CLIENT.MakeRequest("GET", endpoint, nil, nil, nil, headers)
 	return &common.APIResponse{
 		FilteredReponse: common.JsonifyResponse(resp.String()),
 		RawResponse:     resp,
@@ -118,14 +119,15 @@ func GetCOAppDetailsTool(s *server.MCPServer) {
 	)
 	s.AddTool(getCOAppDetailsTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		apphash := request.Params.Arguments["apphash"].(string)
-		resp, err := GetCOAppDetails(apphash)
+		headers := common.PrepareRequestHeaders(ctx)
+		resp, err := GetCOAppDetails(apphash, headers)
 		return common.MCPToolResponse(resp, []int{200}, err)
 	})
 }
 
-func GetCOAppActionsListing(params map[string]string) (*common.APIResponse, error) {
+func GetCOAppActionsListing(params map[string]string, headers map[string]string) (*common.APIResponse, error) {
 	app_action_resp := AppActionsResponse{}
-	resp, err := CO_CLIENT.MakeRequest("GET", GetSoarEndpoint(app_actions_endpoint), params, &app_action_resp, nil, nil)
+	resp, err := CO_CLIENT.MakeRequest("GET", GetSoarEndpoint(app_actions_endpoint), params, &app_action_resp, nil, headers)
 	return &common.APIResponse{
 		FilteredReponse: common.JsonifyResponse(app_action_resp),
 		RawResponse:     resp,
@@ -149,14 +151,15 @@ func COAppActionsListingTool(s *server.MCPServer) {
 	s.AddTool(getCOAppActionsListing, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		params_list := []string{"page", "page_size", "app_unique_id", "q"}
 		params := common.ExtractParams(request, params_list)
-		resp, err := GetCOAppActionsListing(params)
+		headers := common.PrepareRequestHeaders(ctx)
+		resp, err := GetCOAppActionsListing(params, headers)
 		return common.MCPToolResponse(resp, []int{200}, err)
 	})
 }
 
-func GetCOAppActionDetails(id string) (*common.APIResponse, error) {
+func GetCOAppActionDetails(id string, headers map[string]string) (*common.APIResponse, error) {
 	endpoint := GetSoarEndpoint(fmt.Sprintf("%v%v/", app_actions_endpoint, id))
-	resp, err := CO_CLIENT.MakeRequest("GET", endpoint, nil, nil, nil, nil)
+	resp, err := CO_CLIENT.MakeRequest("GET", endpoint, nil, nil, nil, headers)
 	return &common.APIResponse{
 		FilteredReponse: common.JsonifyResponse(resp.String()),
 		RawResponse:     resp,
@@ -173,14 +176,15 @@ func GetCOAppActionDetailsTool(s *server.MCPServer) {
 	)
 	s.AddTool(getCOAppActionDetailsTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		id := request.Params.Arguments["id"].(string)
-		resp, err := GetCOAppActionDetails(id)
+		headers := common.PrepareRequestHeaders(ctx)
+		resp, err := GetCOAppActionDetails(id, headers)
 		return common.MCPToolResponse(resp, []int{200}, err)
 	})
 }
 
-func GetConfiguredInstancesOfCOApp(apphash string) (*common.APIResponse, error) {
+func GetConfiguredInstancesOfCOApp(apphash string, headers map[string]string) (*common.APIResponse, error) {
 	params := map[string]string{"app_unique_id": apphash}
-	resp, err := CO_CLIENT.MakeRequest("GET", GetSoarEndpoint(list_app_instance), params, nil, nil, nil)
+	resp, err := CO_CLIENT.MakeRequest("GET", GetSoarEndpoint(list_app_instance), params, nil, nil, headers)
 	return &common.APIResponse{
 		FilteredReponse: common.JsonifyResponse(resp.String()),
 		RawResponse:     resp,
@@ -197,13 +201,14 @@ func GetConfiguredInstancesOfCOAppTool(s *server.MCPServer) {
 	)
 	s.AddTool(getConfiguredInstancesOfCOAppTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		apphash := request.Params.Arguments["apphash"].(string)
-		resp, err := GetConfiguredInstancesOfCOApp(apphash)
+		headers := common.PrepareRequestHeaders(ctx)
+		resp, err := GetConfiguredInstancesOfCOApp(apphash, headers)
 		return common.MCPToolResponse(resp, []int{200}, err)
 	})
 }
 
-func ExecuteActionOfCOApp(payload any) (*common.APIResponse, error) {
-	resp, err := CO_CLIENT.MakeRequest("POST", execute_action, nil, nil, payload, nil)
+func ExecuteActionOfCOApp(payload any, headers map[string]string) (*common.APIResponse, error) {
+	resp, err := CO_CLIENT.MakeRequest("POST", execute_action, nil, nil, payload, headers)
 	return &common.APIResponse{
 		FilteredReponse: common.JsonifyResponse(resp.String()),
 		RawResponse:     resp,
@@ -226,7 +231,8 @@ func ExecuteActionOfCOAppTool(s *server.MCPServer) {
 		mp["workspaceid"] = logged_in_user_details.PreferredWorkspaceID
 		mp["sku"] = 1
 
-		resp, err := ExecuteActionOfCOApp(mp)
+		headers := common.PrepareRequestHeaders(ctx)
+		resp, err := ExecuteActionOfCOApp(mp, headers)
 		return common.MCPToolResponse(resp, []int{200}, err)
 	})
 }

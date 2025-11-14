@@ -13,9 +13,9 @@ type BulkActionResponse struct {
 	Message string `json:"message"`
 }
 
-func ThreatDataListBulkAction(endpoint string, payload any) (*common.APIResponse, error) {
+func ThreatDataListBulkAction(endpoint string, payload any, headers map[string]string) (*common.APIResponse, error) {
 	bulkResp := BulkActionResponse{}
-	resp, err := CTIX_CLIENT.MakeRequest("POST", endpoint, nil, &bulkResp, payload, nil)
+	resp, err := CTIX_CLIENT.MakeRequest("POST", endpoint, nil, &bulkResp, payload, headers)
 	return &common.APIResponse{
 		FilteredReponse: common.JsonifyResponse(bulkResp),
 		RawResponse:     resp,
@@ -29,7 +29,8 @@ func ThreatDataListBulkActionTools(s *server.MCPServer) {
 		tool := mcp.NewToolWithRawSchema(v["tool_name"], v["tool_description"], []byte(v["schema"]))
 
 		s.AddTool(tool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			resp, err := ThreatDataListBulkAction(v["endpoint"], request.Params.Arguments)
+			headers := common.PrepareRequestHeaders(ctx)
+			resp, err := ThreatDataListBulkAction(v["endpoint"], request.Params.Arguments, headers)
 			return common.MCPToolResponse(resp, []int{200}, err)
 		})
 	}

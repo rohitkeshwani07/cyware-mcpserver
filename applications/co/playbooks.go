@@ -48,9 +48,9 @@ type ExecuteAPIResponse struct {
 	ResultID string `json:"result_id"`
 }
 
-func GetPlayBookList(params map[string]string) (*common.APIResponse, error) {
+func GetPlayBookList(params map[string]string, headers map[string]string) (*common.APIResponse, error) {
 	playbook_listing_resp := ListPlaybookResponse{}
-	resp, err := CO_CLIENT.MakeRequest("GET", GetSoarEndpoint(list_playbook_endpoint), params, &playbook_listing_resp, nil, nil)
+	resp, err := CO_CLIENT.MakeRequest("GET", GetSoarEndpoint(list_playbook_endpoint), params, &playbook_listing_resp, nil, headers)
 	return &common.APIResponse{
 		FilteredReponse: common.JsonifyResponse(playbook_listing_resp),
 		RawResponse:     resp,
@@ -73,14 +73,15 @@ func GetPlayBookListTool(s *server.MCPServer) {
 	s.AddTool(getPlayBookListTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		params_list := []string{"page", "page_size", "status", "q"}
 		params := common.ExtractParams(request, params_list)
-		resp, err := GetPlayBookList(params)
+		headers := common.PrepareRequestHeaders(ctx)
+		resp, err := GetPlayBookList(params, headers)
 		return common.MCPToolResponse(resp, []int{200}, err)
 	})
 }
 
-func GetPlaybookDetails(playbook_id string) (*common.APIResponse, error) {
+func GetPlaybookDetails(playbook_id string, headers map[string]string) (*common.APIResponse, error) {
 	endpoint := fmt.Sprintf("%v%v/", GetSoarEndpoint(list_playbook_endpoint), playbook_id)
-	resp, err := CO_CLIENT.MakeRequest("GET", endpoint, nil, nil, nil, nil)
+	resp, err := CO_CLIENT.MakeRequest("GET", endpoint, nil, nil, nil, headers)
 	return &common.APIResponse{
 		FilteredReponse: common.JsonifyResponse(resp.String()),
 		RawResponse:     resp,
@@ -98,17 +99,17 @@ func GetPlaybookDetailsTool(s *server.MCPServer) {
 
 	s.AddTool(getPlaybookDetailsTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		playbook_id := request.Params.Arguments["playbook_id"].(string)
-
-		resp, err := GetPlaybookDetails(playbook_id)
+		headers := common.PrepareRequestHeaders(ctx)
+		resp, err := GetPlaybookDetails(playbook_id, headers)
 		return common.MCPToolResponse(resp, []int{200}, err)
 	})
 }
 
-func ExecutePlaybook(payload any) (*common.APIResponse, error) {
+func ExecutePlaybook(payload any, headers map[string]string) (*common.APIResponse, error) {
 	hash := payload.(map[string]any)["pbhash"]
 	endpoint := GetSoarEndpoint(fmt.Sprintf("playbooks/%v/execute/", hash))
 	exec_resp := ExecuteAPIResponse{}
-	resp, err := CO_CLIENT.MakeRequest("POST", endpoint, nil, nil, payload, nil)
+	resp, err := CO_CLIENT.MakeRequest("POST", endpoint, nil, nil, payload, headers)
 	json.Unmarshal([]byte(resp.String()), &exec_resp)
 	return &common.APIResponse{
 		FilteredReponse: common.JsonifyResponse(exec_resp),
@@ -127,7 +128,8 @@ func ExecutePlaybookTool(s *server.MCPServer) {
 	)
 
 	s.AddTool(executePlaybookTool, func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		resp, err := ExecutePlaybook(request.Params.Arguments)
+		headers := common.PrepareRequestHeaders(ctx)
+		resp, err := ExecutePlaybook(request.Params.Arguments, headers)
 		return common.MCPToolResponse(resp, []int{201}, err)
 	})
 
